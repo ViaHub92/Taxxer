@@ -6,6 +6,7 @@ import {
 } from "react-router-dom";
 import App from "./App";
 import "./index.css";
+import Home from "./components/Home";
 import IncomeForm from "./components/IncomeForm";
 import IncomeList from "./components/IncomeList";
 import SpendingForm from "./components/SpendingForm";
@@ -18,7 +19,7 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <div>Welcome to Taxxer</div>,
+        element: <Home />
       },
       {
         path: "income",

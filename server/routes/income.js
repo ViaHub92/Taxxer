@@ -37,7 +37,7 @@ router.post("/", async (req, res) => {
     let newDocument = {
       date: new Date(req.body.date),
       amount: parseFloat(req.body.amount),
-      category: req.body.category, // e.g., 'salary', 'freelance', 'investment'
+      category: req.body.category,
       description: req.body.description,
       taxable: req.body.taxable || true,
       createdAt: new Date(),

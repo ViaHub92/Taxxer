@@ -7,24 +7,6 @@ export default function Navbar() {
         <NavLink to="/">
           <img src="/logo.png" alt="Taxxer Logo" className="h-30 w-auto" />
         </NavLink>
-        <div className="flex gap-4">
-          <NavLink 
-            to="/income"
-            className={({ isActive }) =>
-              isActive ? "text-blue-600 font-bold" : "text-gray-600 hover:text-blue-600"
-            }
-          >
-            Income
-          </NavLink>
-          <NavLink 
-            to="/spending"
-            className={({ isActive }) =>
-              isActive ? "text-blue-600 font-bold" : "text-gray-600 hover:text-blue-600"
-            }
-          >
-            Spending
-          </NavLink>
-        </div>
       </nav>
     </div>
   );
