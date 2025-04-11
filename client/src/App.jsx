@@ -1,16 +1,13 @@
 import { Outlet } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import IncomeForm from "./components/IncomeForm";
-import IncomeList from "./components/IncomeList";
 
-const App = () => {
+export default function App() {
   return (
-    <div className="w-full p-6">
+    <div className="min-h-screen bg-gray-100">
       <Navbar />
-      <IncomeForm />
-      <IncomeList />
-      <Outlet />
+      <div className="container mx-auto px-4 py-8">
+        <Outlet />
+      </div>
     </div>
   );
-};
-export default App;
+}
