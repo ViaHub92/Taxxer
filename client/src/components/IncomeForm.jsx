@@ -25,7 +25,7 @@ export default function IncomeForm() {
         setIncome({
           date: new Date().toISOString().split('T')[0],
           amount: '',
-          category: 'salary',
+          category: 'card',
           description: '',
           taxable: true
         });
@@ -69,33 +69,11 @@ export default function IncomeForm() {
             onChange={(e) => setIncome({...income, category: e.target.value})}
             className="border p-1 ml-2"
           >
-            <option value="salary">Salary</option>
-            <option value="freelance">Freelance</option>
-            <option value="investment">Investment</option>
+            <option value="card">Card</option>
+            <option value="cash">Cash</option>
+            <option value="online">Online-Payment</option>
             <option value="other">Other</option>
           </select>
-        </div>
-
-        <div>
-          <label>Description:</label>
-          <input
-            type="text"
-            value={income.description}
-            onChange={(e) => setIncome({...income, description: e.target.value})}
-            className="border p-1 ml-2"
-          />
-        </div>
-
-        <div>
-          <label>
-            <input
-              type="checkbox"
-              checked={income.taxable}
-              onChange={(e) => setIncome({...income, taxable: e.target.checked})}
-              className="mr-2"
-            />
-            Taxable Income
-          </label>
         </div>
 
         <button 

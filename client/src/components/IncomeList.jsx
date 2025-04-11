@@ -35,8 +35,6 @@ function IncomeList() {
               <th className="px-4 py-2 text-left">Date</th>
               <th className="px-4 py-2 text-left">Amount</th>
               <th className="px-4 py-2 text-left">Category</th>
-              <th className="px-4 py-2 text-left">Description</th>
-              <th className="px-4 py-2 text-left">Taxable</th>
             </tr>
           </thead>
           <tbody>
