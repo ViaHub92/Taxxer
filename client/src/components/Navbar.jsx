@@ -36,6 +36,14 @@ export default function Navbar() {
               >
                 Spending
               </NavLink>
+              <NavLink 
+                to="/tax-summary"
+                className={({ isActive }) => 
+                  `px-3 py-2 rounded-md text-sm ${isActive ? 'bg-blue-700 text-white' : 'text-gray-700 hover:bg-gray-100'}`
+                }
+              >
+                Tax Summary
+              </NavLink>
             </div>
           )}
         </div>

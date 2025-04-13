@@ -14,6 +14,7 @@ import SpendingForm from "./components/SpendingForm";
 import SpendingList from "./components/SpendingList";
 import ProtectedRoute from "./components/ProtectedRoute";
 import Register from "./components/Register";
+import TaxSummary from "./components/TaxSummary";
 
 const router = createBrowserRouter([
   {
@@ -49,6 +50,14 @@ const router = createBrowserRouter([
           <ProtectedRoute>
             <SpendingForm />
             <SpendingList />
+          </ProtectedRoute>
+        ),
+      },
+      {
+        path: "tax-summary",
+        element: (
+          <ProtectedRoute>
+            <TaxSummary />
           </ProtectedRoute>
         ),
       },
