@@ -43,7 +43,6 @@ export default function SpendingList() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tax Deductible</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -64,9 +63,6 @@ export default function SpendingList() {
                 <td className="px-6 py-4">
                   {spending.description}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {spending.taxDeductible ? "Yes" : "No"}
-                </td>
               </tr>
             ))}
           </tbody>
@@ -76,7 +72,7 @@ export default function SpendingList() {
               <td className="px-6 py-4 font-semibold">
                 ${spendings.reduce((sum, spending) => sum + parseFloat(spending.amount), 0).toFixed(2)}
               </td>
-              <td colSpan={4}></td>
+              <td colSpan={3}></td>
             </tr>
           </tfoot>
         </table>

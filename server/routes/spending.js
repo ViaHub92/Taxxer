@@ -25,7 +25,6 @@ router.post("/", async (req, res) => {
       amount: parseFloat(req.body.amount),
       category: req.body.category,
       description: req.body.description,
-      taxDeductible: req.body.taxDeductible || false,
       paymentMethod: req.body.paymentMethod,
       createdAt: new Date(),
       updatedAt: new Date()
@@ -50,7 +49,6 @@ router.patch("/:id", async (req, res) => {
         amount: req.body.amount ? parseFloat(req.body.amount) : undefined,
         category: req.body.category,
         description: req.body.description,
-        taxDeductible: req.body.taxDeductible,
         paymentMethod: req.body.paymentMethod,
         updatedAt: new Date()
       }

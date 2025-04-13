@@ -27,45 +27,47 @@ export default function IncomeList() {
     }
   };
 
-  if (loading) return <div>Loading...</div>;
-  if (error) return <div className="text-red-500">Error: {error}</div>;
+  if (loading) return <div className="text-center p-4">Loading...</div>;
+  if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
 
   return (
     <div className="mt-8">
-      <h2 className="text-xl mb-4">Income History</h2>
-      <div className="overflow-x-auto">
-        <table className="min-w-full bg-white border">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="px-4 py-2 text-left">Date</th>
-              <th className="px-4 py-2 text-left">Amount</th>
-              <th className="px-4 py-2 text-left">Category</th>
+      <h2 className="text-xl font-bold mb-4">Income History</h2>
+      <div className="overflow-x-auto bg-white rounded-lg shadow">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="bg-white divide-y divide-gray-200">
             {incomes.map((income) => (
-              <tr key={income._id} className="border-t hover:bg-gray-50">
-                <td className="px-4 py-2">
+              <tr key={income._id} className="hover:bg-gray-50">
+                <td className="px-6 py-4 whitespace-nowrap">
                   {new Date(income.date).toLocaleDateString()}
                 </td>
-                <td className="px-4 py-2">
+                <td className="px-6 py-4 whitespace-nowrap">
                   ${parseFloat(income.amount).toFixed(2)}
                 </td>
-                <td className="px-4 py-2 capitalize">{income.category}</td>
-                <td className="px-4 py-2">{income.description}</td>
-                <td className="px-4 py-2">
-                  {income.taxable ? "Yes" : "No"}
+                <td className="px-6 py-4 whitespace-nowrap capitalize">
+                  {income.category}
+                </td>
+                <td className="px-6 py-4">
+                  {income.description}
                 </td>
               </tr>
             ))}
           </tbody>
-          <tfoot>
-            <tr className="bg-gray-100 font-semibold">
-              <td className="px-4 py-2">Total</td>
-              <td className="px-4 py-2">
+          <tfoot className="bg-gray-50">
+            <tr>
+              <td className="px-6 py-4 font-semibold">Total</td>
+              <td className="px-6 py-4 font-semibold">
                 ${incomes.reduce((sum, income) => sum + parseFloat(income.amount), 0).toFixed(2)}
               </td>
-              <td colSpan={3}></td>
+              <td colSpan={2}></td>
             </tr>
           </tfoot>
         </table>

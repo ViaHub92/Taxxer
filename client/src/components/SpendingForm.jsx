@@ -6,12 +6,11 @@ export default function SpendingForm() {
     amount: '',
     category: 'housing',
     description: '',
-    taxDeductible: false,
     paymentMethod: 'cash'
   });
 
   const categories = [
-    'housing',
+    'supplies',
     'transportation',
     'food',
     'utilities',
@@ -47,14 +46,12 @@ export default function SpendingForm() {
         throw new Error('Failed to add spending');
       }
 
-
       setSpending({
         date: '',
         amount: '',
         category: '',
         description: '',
-        paymentMethod: '',
-        taxDeductible: false
+        paymentMethod: ''
       });
       window.location.reload();
     } catch (error) {
@@ -132,18 +129,6 @@ export default function SpendingForm() {
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
             rows={3}
           />
-        </div>
-
-        <div>
-          <label className="flex items-center">
-            <input
-              type="checkbox"
-              checked={spending.taxDeductible}
-              onChange={(e) => setSpending({...spending, taxDeductible: e.target.checked})}
-              className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            />
-            <span className="ml-2 text-sm text-gray-700">Tax Deductible</span>
-          </label>
         </div>
 
         <button 
