@@ -21,20 +21,21 @@ export default function IncomeForm() {
         },
         body: JSON.stringify(income)
       });
-      
-      if (response.ok) {
-        alert('Income added successfully!');
-        setIncome({
-          date: new Date().toISOString().split('T')[0],
-          amount: '',
-          category: 'card',
-          description: '',
-          taxable: true
-        });
+
+      if (!response.ok) {
+        throw new Error('Failed to add income');
       }
+
+      setIncome({
+        date: '',
+        amount: '',
+        category: '',
+        description: '',
+        taxable: true
+      });
+      window.location.reload();
     } catch (error) {
       console.error('Error:', error);
-      alert('Failed to add income');
     }
   };
 

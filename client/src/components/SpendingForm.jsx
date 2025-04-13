@@ -42,21 +42,23 @@ export default function SpendingForm() {
         },
         body: JSON.stringify(spending)
       });
-      
-      if (response.ok) {
-        alert('Spending recorded successfully!');
-        setSpending({
-          date: new Date().toISOString().split('T')[0],
-          amount: '',
-          category: 'housing',
-          description: '',
-          taxDeductible: false,
-          paymentMethod: 'cash'
-        });
+
+      if (!response.ok) {
+        throw new Error('Failed to add spending');
       }
+
+
+      setSpending({
+        date: '',
+        amount: '',
+        category: '',
+        description: '',
+        paymentMethod: '',
+        taxDeductible: false
+      });
+      window.location.reload();
     } catch (error) {
       console.error('Error:', error);
-      alert('Failed to record spending');
     }
   };
 
