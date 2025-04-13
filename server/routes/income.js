@@ -4,11 +4,11 @@ import { ObjectId } from "mongodb";
 
 const router = express.Router();
 
-// Get all income records
+// Get all income records for the current user
 router.get("/", async (req, res) => {
   try {
     let collection = await db.collection("income");
-    let results = await collection.find({}).toArray();
+    let results = await collection.find({ userId: req.user.userId }).toArray();
     res.send(results).status(200);
   } catch (err) {
     console.error(err);
@@ -35,6 +35,7 @@ router.get("/:id", async (req, res) => {
 router.post("/", async (req, res) => {
   try {
     let newDocument = {
+      userId: req.user.userId,
       date: new Date(req.body.date),
       amount: parseFloat(req.body.amount),
       category: req.body.category,

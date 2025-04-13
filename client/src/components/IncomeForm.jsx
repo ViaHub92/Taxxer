@@ -12,10 +12,12 @@ export default function IncomeForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:5050/income', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-auth-token': token
         },
         body: JSON.stringify(income)
       });

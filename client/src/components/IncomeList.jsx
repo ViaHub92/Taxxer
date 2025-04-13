@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 
-function IncomeList() {
+export default function IncomeList() {
   const [incomes, setIncomes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -11,7 +11,12 @@ function IncomeList() {
 
   const fetchIncomes = async () => {
     try {
-      const response = await fetch('http://localhost:5050/income');
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5050/income', {
+        headers: {
+          'x-auth-token': token
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch incomes');
       const data = await response.json();
       setIncomes(data);
@@ -68,5 +73,3 @@ function IncomeList() {
     </div>
   );
 }
-
-export default IncomeList;

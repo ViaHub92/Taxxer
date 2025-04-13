@@ -33,10 +33,12 @@ export default function SpendingForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
+      const token = localStorage.getItem('token');
       const response = await fetch('http://localhost:5050/spending', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-auth-token': token
         },
         body: JSON.stringify(spending)
       });

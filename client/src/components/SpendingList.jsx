@@ -12,7 +12,12 @@ export default function SpendingList() {
 
   const fetchSpendings = async () => {
     try {
-      const response = await fetch('http://localhost:5050/spending');
+      const token = localStorage.getItem('token');
+      const response = await fetch('http://localhost:5050/spending', {
+        headers: {
+          'x-auth-token': token
+        }
+      });
       if (!response.ok) throw new Error('Failed to fetch spendings');
       const data = await response.json();
       setSpendings(data);
