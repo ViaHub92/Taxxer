@@ -8,6 +8,14 @@ export default function TaxSummary() {
     loading: true,
     error: null
   });
+  const [selectedMonth, setSelectedMonth] = useState(null);
+  const [transactions, setTransactions] = useState({ incomes: [], spendings: [] });
+  const [showModal, setShowModal] = useState(false);
+  // Add new state for storing all transactions
+  const [allTransactions, setAllTransactions] = useState({
+    incomes: [],
+    spendings: []
+  });
 
   useEffect(() => {
     fetchTaxData();
@@ -19,6 +27,9 @@ export default function TaxSummary() {
         api('/income'),
         api('/spending')
       ]);
+
+      // Store all transactions
+      setAllTransactions({ incomes, spendings });
 
       const processedData = processTaxData(incomes, spendings);
       setSummaryData({
@@ -95,6 +106,30 @@ export default function TaxSummary() {
     return Math.max(0, taxableIncome * 0.3); // Assuming 30% tax rate
   };
 
+  const handleMonthClick = (monthKey) => {
+    const [year, month] = monthKey.split('-');
+    const startDate = new Date(year, month, 1);
+    const endDate = new Date(year, month + 1, 0); // Last day of month
+
+    // Use allTransactions instead of undefined incomes and spendings
+    const monthlyIncomes = allTransactions.incomes.filter(income => {
+      const date = new Date(income.date);
+      return date >= startDate && date <= endDate;
+    });
+
+    const monthlySpendings = allTransactions.spendings.filter(spending => {
+      const date = new Date(spending.date);
+      return date >= startDate && date <= endDate;
+    });
+
+    setTransactions({
+      incomes: monthlyIncomes,
+      spendings: monthlySpendings
+    });
+    setSelectedMonth(monthKey);
+    setShowModal(true);
+  };
+
   if (summaryData.loading) return <div className="text-center p-4">Loading...</div>;
   if (summaryData.error) return <div className="text-red-500 p-4">Error: {summaryData.error}</div>;
 
@@ -110,6 +145,86 @@ export default function TaxSummary() {
     return new Date(year, month).toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
   };
 
+  // Add Modal component
+  const TransactionModal = () => {
+    if (!showModal) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto p-6">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-bold">
+              {formatMonth(selectedMonth)} Transactions
+            </h3>
+            <button
+              onClick={() => setShowModal(false)}
+              className="text-gray-500 hover:text-gray-700"
+            >
+              ✕
+            </button>
+          </div>
+
+          {/* Income Section */}
+          <div className="mb-6">
+            <h4 className="text-lg font-semibold mb-2">Income</h4>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {transactions.incomes.map(income => (
+                    <tr key={income._id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2">{new Date(income.date).toLocaleDateString()}</td>
+                      <td className="px-4 py-2">{formatCurrency(income.amount)}</td>
+                      <td className="px-4 py-2 capitalize">{income.category}</td>
+                      <td className="px-4 py-2">{income.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Spending Section */}
+          <div>
+            <h4 className="text-lg font-semibold mb-2">Spending</h4>
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment Method</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {transactions.spendings.map(spending => (
+                    <tr key={spending._id} className="hover:bg-gray-50">
+                      <td className="px-4 py-2">{new Date(spending.date).toLocaleDateString()}</td>
+                      <td className="px-4 py-2">{formatCurrency(spending.amount)}</td>
+                      <td className="px-4 py-2 capitalize">{spending.category}</td>
+                      <td className="px-4 py-2 capitalize">{spending.paymentMethod}</td>
+                      <td className="px-4 py-2">{spending.description}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // Update the monthly summary cards to be clickable
   return (
     <div className="space-y-8">
       {/* Yearly Summary */}
@@ -140,7 +255,11 @@ export default function TaxSummary() {
           {Object.entries(summaryData.monthly)
             .sort(([keyA], [keyB]) => keyB.localeCompare(keyA))
             .map(([monthKey, data]) => (
-              <div key={monthKey} className="bg-gray-50 rounded-lg p-4">
+              <div
+                key={monthKey}
+                onClick={() => handleMonthClick(monthKey)}
+                className="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+              >
                 <h3 className="text-lg font-semibold mb-2">{formatMonth(monthKey)}</h3>
                 <div className="space-y-2">
                   <p>Income: {formatCurrency(data.income)}</p>
@@ -153,6 +272,9 @@ export default function TaxSummary() {
             ))}
         </div>
       </div>
+
+      {/* Render the modal */}
+      <TransactionModal />
     </div>
   );
 }
