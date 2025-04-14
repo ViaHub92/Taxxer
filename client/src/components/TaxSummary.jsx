@@ -103,7 +103,7 @@ export default function TaxSummary() {
   const calculateTax = (income, expenses) => {
     const taxableIncome = income - expenses;
     // This is a simplified tax calculation - I will change it to a more realistic one later
-    return Math.max(0, taxableIncome * 0.3); // Assuming 30% tax rate
+    return Math.max(0, taxableIncome * 0.9235 * 0.153); // this is self-employment tax rate in virginia
   };
 
   const handleMonthClick = (monthKey) => {
