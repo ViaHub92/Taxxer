@@ -34,9 +34,14 @@ router.get("/:id", async (req, res) => {
 // Create a new income record
 router.post("/", async (req, res) => {
   try {
+    // Adjust the date to preserve local timezone
+    const inputDate = new Date(req.body.date);
+    const timezoneOffset = inputDate.getTimezoneOffset();
+    const adjustedDate = new Date(inputDate.getTime() + timezoneOffset * 60000);
+
     let newDocument = {
       userId: req.user.userId,
-      date: new Date(req.body.date),
+      date: adjustedDate,
       amount: parseFloat(req.body.amount),
       category: req.body.category,
       description: req.body.description,
@@ -58,9 +63,18 @@ router.post("/", async (req, res) => {
 router.patch("/:id", async (req, res) => {
   try {
     const query = { _id: new ObjectId(req.params.id) };
+    
+    // Adjust date if it's being updated
+    let dateToUpdate;
+    if (req.body.date) {
+      const inputDate = new Date(req.body.date);
+      const timezoneOffset = inputDate.getTimezoneOffset();
+      dateToUpdate = new Date(inputDate.getTime() + timezoneOffset * 60000);
+    }
+
     const updates = {
       $set: {
-        date: req.body.date ? new Date(req.body.date) : undefined,
+        date: dateToUpdate || undefined,
         amount: req.body.amount ? parseFloat(req.body.amount) : undefined,
         category: req.body.category,
         description: req.body.description,

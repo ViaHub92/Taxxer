@@ -152,14 +152,16 @@ export default function TaxSummary() {
       const date = new Date(income.date);
       return date >= startDate && date <= endDate && 
              date.getUTCFullYear() === parseInt(year); // Add year check
-    });
-  
+    })
+
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
     const monthlySpendings = allTransactions.spendings.filter(spending => {
       const date = new Date(spending.date);
       return date >= startDate && date <= endDate && 
              date.getUTCFullYear() === parseInt(year); // Add year check
-    });
-  
+    })
+    .sort((a, b) => new Date(a.date) - new Date(b.date));
+    
     setTransactions({
       incomes: monthlyIncomes,
       spendings: monthlySpendings
@@ -183,9 +185,14 @@ export default function TaxSummary() {
           return date >= yearStart && date <= yearEnd;
         });
 
+    // Sort the filtered transactions by date
+    const sortedTransactions = filteredTransactions.sort((a, b) => {
+      return new Date(a.date) - new Date(b.date);
+    });
+
     setTransactions({
-      incomes: type === 'income' ? filteredTransactions : [],
-      spendings: type === 'spending' ? filteredTransactions : []
+      incomes: type === 'income' ? sortedTransactions : [],
+      spendings: type === 'spending' ? sortedTransactions : []
     });
     setSelectedYear(year);
     setYearlyViewType(type);
@@ -389,7 +396,7 @@ export default function TaxSummary() {
         <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-gray-200">Yearly Tax Summary</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Object.entries(summaryData.yearly)
-            .sort(([yearA], [yearB]) => yearB - yearA)
+            .sort(([yearA], [yearB]) => yearA - yearB)
             .map(([year, data]) => (
               <div key={year} className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 shadow-sm">
                 <h3 className="text-xl font-semibold mb-2 pb-2 border-b border-gray-200">{year}</h3>
@@ -424,7 +431,7 @@ export default function TaxSummary() {
         <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-gray-200">Monthly Tax Summary</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Object.entries(summaryData.monthly)
-            .sort(([keyA], [keyB]) => keyB.localeCompare(keyA))
+            .sort(([keyA], [keyB]) => keyA.localeCompare(keyB)) // Changed from keyB.localeCompare(keyA)
             .map(([monthKey, data]) => (
               <div
                 key={monthKey}

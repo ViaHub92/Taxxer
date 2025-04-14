@@ -42,6 +42,11 @@ export default function IncomeList() {
     }
   };
 
+  // Sort incomes by date (newest first)
+  const sortedIncomes = [...incomes].sort((a, b) => {
+    return new Date(a.date) - new Date(b.date);
+  });
+  
   if (loading) return <div className="text-center p-4">Loading...</div>;
   if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
 
@@ -60,7 +65,7 @@ export default function IncomeList() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {incomes.map((income) => (
+            {sortedIncomes.map((income) => (
               <tr key={income._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   {new Date(income.date).toLocaleDateString()}
@@ -89,7 +94,7 @@ export default function IncomeList() {
             <tr>
               <td className="px-6 py-4 font-semibold">Total</td>
               <td className="px-6 py-4 font-semibold">
-                ${incomes.reduce((sum, income) => sum + parseFloat(income.amount), 0).toFixed(2)}
+                ${sortedIncomes.reduce((sum, income) => sum + parseFloat(income.amount), 0).toFixed(2)}
               </td>
               <td colSpan={3}></td>
             </tr>

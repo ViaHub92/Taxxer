@@ -42,6 +42,11 @@ export default function SpendingList() {
     }
   };
 
+  // Sort spendings by date (oldest first)
+  const sortedSpendings = [...spendings].sort((a, b) => {
+    return new Date(a.date) - new Date(b.date);
+  });
+
   if (loading) return <div className="text-center p-4">Loading...</div>;
   if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
 
@@ -61,7 +66,7 @@ export default function SpendingList() {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {spendings.map((spending) => (
+            {sortedSpendings.map((spending) => (
               <tr key={spending._id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   {new Date(spending.date).toLocaleDateString()}
@@ -93,9 +98,9 @@ export default function SpendingList() {
             <tr>
               <td className="px-6 py-4 font-semibold">Total</td>
               <td className="px-6 py-4 font-semibold">
-                ${spendings.reduce((sum, spending) => sum + parseFloat(spending.amount), 0).toFixed(2)}
+                ${sortedSpendings.reduce((sum, spending) => sum + parseFloat(spending.amount), 0).toFixed(2)}
               </td>
-              <td colSpan={3}></td>
+              <td colSpan={4}></td>
             </tr>
           </tfoot>
         </table>
