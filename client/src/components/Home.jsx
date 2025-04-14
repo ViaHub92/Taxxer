@@ -66,10 +66,7 @@ export default function Home() {
         className="mt-16 text-center"
       >
         <p className="text-sm text-gray-500">
-          Already tracking with Taxxer? View your{" "}
-          <Link to="/dashboard" className="text-blue-600 hover:underline">
-            financial summary
-          </Link>
+          &copy; 2025 Taxxer. All rights reserved.
         </p>
       </motion.div>
     </div>

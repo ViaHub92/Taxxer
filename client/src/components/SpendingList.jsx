@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { api } from '../utils/api';
+import { api, deleteSpending } from '../utils/api';
 
 export default function SpendingList() {
   const [spendings, setSpendings] = useState([]);
@@ -28,6 +28,20 @@ export default function SpendingList() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this spending?')) {
+      return;
+    }
+
+    try {
+      await deleteSpending(id);
+      // Refresh the list after deletion
+      fetchSpendings();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   if (loading) return <div className="text-center p-4">Loading...</div>;
   if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
 
@@ -43,6 +57,7 @@ export default function SpendingList() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Payment Method</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -62,6 +77,14 @@ export default function SpendingList() {
                 </td>
                 <td className="px-6 py-4">
                   {spending.description}
+                </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <button
+                    onClick={() => handleDelete(spending._id)}
+                    className="text-rose-500 hover:text-rose-700 transition-colors"
+                  >
+                    Delete
+                  </button>
                 </td>
               </tr>
             ))}

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { api, deleteIncome } from '../utils/api';
 
 export default function IncomeList() {
   const [incomes, setIncomes] = useState([]);
@@ -27,6 +28,20 @@ export default function IncomeList() {
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this income?')) {
+      return;
+    }
+
+    try {
+      await deleteIncome(id);
+      // Refresh the list after deletion
+      fetchIncomes();
+    } catch (err) {
+      setError(err.message);
+    }
+  };
+
   if (loading) return <div className="text-center p-4">Loading...</div>;
   if (error) return <div className="text-red-500 p-4">Error: {error}</div>;
 
@@ -41,6 +56,7 @@ export default function IncomeList() {
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
@@ -58,6 +74,14 @@ export default function IncomeList() {
                 <td className="px-6 py-4">
                   {income.description}
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  <button
+                    onClick={() => handleDelete(income._id)}
+                    className="text-rose-500 hover:text-rose-700 transition-colors"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
           </tbody>
@@ -67,7 +91,7 @@ export default function IncomeList() {
               <td className="px-6 py-4 font-semibold">
                 ${incomes.reduce((sum, income) => sum + parseFloat(income.amount), 0).toFixed(2)}
               </td>
-              <td colSpan={2}></td>
+              <td colSpan={3}></td>
             </tr>
           </tfoot>
         </table>

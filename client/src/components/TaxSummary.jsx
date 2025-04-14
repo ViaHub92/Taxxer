@@ -1,5 +1,7 @@
 import { useState, useEffect } from "react";
 import { api } from '../utils/api';
+import { jsPDF } from "jspdf";
+import { autoTable } from 'jspdf-autotable';
 
 export default function TaxSummary() {
   const [summaryData, setSummaryData] = useState({
@@ -16,6 +18,9 @@ export default function TaxSummary() {
     incomes: [],
     spendings: []
   });
+  // Add new state for yearly view
+  const [selectedYear, setSelectedYear] = useState(null);
+  const [yearlyViewType, setYearlyViewType] = useState(null); // 'income' or 'spending'
 
   useEffect(() => {
     fetchTaxData();
@@ -55,18 +60,27 @@ export default function TaxSummary() {
       const date = new Date(income.date);
       const month = date.getMonth();
       const year = date.getFullYear();
+      const monthKey = `${year}-${month}`;
+
+      console.log('Debug - Processing Income:', {
+        date: income.date,
+        month,
+        year,
+        monthKey,
+        amount: income.amount
+      });
       
       // Initialize structures if they don't exist
       if (!yearly[year]) {
         yearly[year] = { income: 0, expenses: 0, taxOwed: 0 };
       }
-      if (!monthly[`${year}-${month}`]) {
-        monthly[`${year}-${month}`] = { income: 0, expenses: 0, taxOwed: 0 };
+      if (!monthly[monthKey]) {
+        monthly[monthKey] = { income: 0, expenses: 0, taxOwed: 0 };
       }
 
       // Add income
       yearly[year].income += parseFloat(income.amount);
-      monthly[`${year}-${month}`].income += parseFloat(income.amount);
+      monthly[monthKey].income += parseFloat(income.amount);
     });
 
     // Process expenses
@@ -74,21 +88,43 @@ export default function TaxSummary() {
       const date = new Date(spending.date);
       const month = date.getMonth();
       const year = date.getFullYear();
+      const monthKey = `${year}-${month}`;
+
+      console.log('Debug - Processing Spending:', {
+        date: spending.date,
+        month,
+        year,
+        monthKey,
+        amount: spending.amount
+      });
 
       // Initialize structures if they don't exist
       if (!yearly[year]) {
         yearly[year] = { income: 0, expenses: 0, taxOwed: 0 };
       }
-      if (!monthly[`${year}-${month}`]) {
-        monthly[`${year}-${month}`] = { income: 0, expenses: 0, taxOwed: 0 };
+      if (!monthly[monthKey]) {
+        monthly[monthKey] = { income: 0, expenses: 0, taxOwed: 0 };
       }
 
       // Add expenses
       yearly[year].expenses += parseFloat(spending.amount);
-      monthly[`${year}-${month}`].expenses += parseFloat(spending.amount);
+      monthly[monthKey].expenses += parseFloat(spending.amount);
     });
 
-    // Calculate tax owed (simplified calculation - adjust based on your tax rules)
+    console.log('Debug - Monthly Totals:', Object.entries(monthly).map(([key, value]) => ({
+      monthKey: key,
+      income: value.income,
+      expenses: value.expenses
+    })));
+
+    // Remove empty months (those with no transactions)
+    Object.keys(monthly).forEach(monthKey => {
+      if (monthly[monthKey].income === 0 && monthly[monthKey].expenses === 0) {
+        delete monthly[monthKey];
+      }
+    });
+
+    // Calculate tax owed
     Object.keys(yearly).forEach(year => {
       yearly[year].taxOwed = calculateTax(yearly[year].income, yearly[year].expenses);
     });
@@ -102,31 +138,57 @@ export default function TaxSummary() {
 
   const calculateTax = (income, expenses) => {
     const taxableIncome = income - expenses;
-    // This is a simplified tax calculation - I will change it to a more realistic one later
     return Math.max(0, taxableIncome * 0.9235 * 0.153); // this is self-employment tax rate in virginia
   };
 
   const handleMonthClick = (monthKey) => {
     const [year, month] = monthKey.split('-');
-    const startDate = new Date(year, month, 1);
-    const endDate = new Date(year, month + 1, 0); // Last day of month
-
+    // Create dates in UTC to avoid timezone issues
+    const startDate = new Date(Date.UTC(parseInt(year), parseInt(month), 1));
+    const endDate = new Date(Date.UTC(parseInt(year), parseInt(month) + 1, 0));
+  
     // Use allTransactions instead of undefined incomes and spendings
     const monthlyIncomes = allTransactions.incomes.filter(income => {
       const date = new Date(income.date);
-      return date >= startDate && date <= endDate;
+      return date >= startDate && date <= endDate && 
+             date.getUTCFullYear() === parseInt(year); // Add year check
     });
-
+  
     const monthlySpendings = allTransactions.spendings.filter(spending => {
       const date = new Date(spending.date);
-      return date >= startDate && date <= endDate;
+      return date >= startDate && date <= endDate && 
+             date.getUTCFullYear() === parseInt(year); // Add year check
     });
-
+  
     setTransactions({
       incomes: monthlyIncomes,
       spendings: monthlySpendings
     });
     setSelectedMonth(monthKey);
+    setShowModal(true);
+  };
+
+  // Add new handler for yearly view
+  const handleYearClick = (year, type) => {
+    const yearStart = new Date(year, 0, 1);
+    const yearEnd = new Date(year, 11, 31);
+
+    const filteredTransactions = type === 'income' 
+      ? allTransactions.incomes.filter(income => {
+          const date = new Date(income.date);
+          return date >= yearStart && date <= yearEnd;
+        })
+      : allTransactions.spendings.filter(spending => {
+          const date = new Date(spending.date);
+          return date >= yearStart && date <= yearEnd;
+        });
+
+    setTransactions({
+      incomes: type === 'income' ? filteredTransactions : [],
+      spendings: type === 'spending' ? filteredTransactions : []
+    });
+    setSelectedYear(year);
+    setYearlyViewType(type);
     setShowModal(true);
   };
 
@@ -149,99 +211,208 @@ export default function TaxSummary() {
   const TransactionModal = () => {
     if (!showModal) return null;
 
+    const title = selectedYear 
+      ? `${selectedYear} ${yearlyViewType === 'income' ? 'Income' : 'Spending'}`
+      : formatMonth(selectedMonth) + ' Transactions';
+
+      const handleDownloadPDF = () => {
+        const doc = new jsPDF();
+        const title = selectedYear 
+          ? `${selectedYear} ${yearlyViewType === 'income' ? 'Income' : 'Spending'}`
+          : formatMonth(selectedMonth) + ' Transactions';
+      
+        // Add title
+        doc.setFontSize(16);
+        doc.text(title, 14, 15);
+        doc.setFontSize(12);
+      
+        let startY = 25;
+        const margin = 20;
+      
+        if (yearlyViewType === 'income' || !selectedYear) {
+          const incomeData = transactions.incomes.map(income => [
+            new Date(income.date).toLocaleDateString(),
+            formatCurrency(income.amount),
+            income.category,
+            income.description
+          ]);
+      
+          if (incomeData.length > 0) {
+            autoTable(doc, {
+              startY,
+              head: [['Date', 'Amount', 'Category', 'Description']],
+              body: incomeData,
+              headStyles: { fillColor: [63, 131, 248] },
+              didDrawPage: (data) => {
+                startY = data.cursor.y + margin;
+              }
+            });
+    
+            startY += margin;
+            const totalIncome = transactions.incomes.reduce((sum, income) => 
+              sum + parseFloat(income.amount), 0
+            );
+            doc.text(`Total Income: ${formatCurrency(totalIncome)}`, 14, startY);
+            startY += margin * 1.5;
+          }
+        }
+      
+        if (yearlyViewType === 'spending' || !selectedYear) {
+          const spendingData = transactions.spendings.map(spending => [
+            new Date(spending.date).toLocaleDateString(),
+            formatCurrency(spending.amount),
+            spending.category,
+            spending.paymentMethod,
+            spending.description
+          ]);
+      
+          if (spendingData.length > 0) {
+            if (yearlyViewType !== 'spending') {
+              doc.text('Spending', 14, startY - 5);
+            }
+      
+            autoTable(doc, {
+              startY,
+              head: [['Date', 'Amount', 'Category', 'Payment Method', 'Description']],
+              body: spendingData,
+              headStyles: { fillColor: [63, 131, 248] },
+              didDrawPage: (data) => {
+                startY = data.cursor.y + margin;
+              }
+            });
+      
+            startY += margin;
+            const totalSpending = transactions.spendings.reduce((sum, spending) => 
+              sum + parseFloat(spending.amount), 0
+            );
+            doc.text(`Total Spending: ${formatCurrency(totalSpending)}`, 14, startY);
+          }
+        }
+      
+        // Save the PDF
+        doc.save(`${title.replace(/\s+/g, '_')}.pdf`);
+      };
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto p-6">
-          <div className="flex justify-between items-center mb-4">
-            <h3 className="text-xl font-bold">
-              {formatMonth(selectedMonth)} Transactions
-            </h3>
-            <button
-              onClick={() => setShowModal(false)}
-              className="text-gray-500 hover:text-gray-700"
-            >
-              ✕
-            </button>
-          </div>
-
-          {/* Income Section */}
-          <div className="mb-6">
-            <h4 className="text-lg font-semibold mb-2">Income</h4>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {transactions.incomes.map(income => (
-                    <tr key={income._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2">{new Date(income.date).toLocaleDateString()}</td>
-                      <td className="px-4 py-2">{formatCurrency(income.amount)}</td>
-                      <td className="px-4 py-2 capitalize">{income.category}</td>
-                      <td className="px-4 py-2">{income.description}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+        <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-auto p-6 border-2 border-gray-200 shadow-xl">
+          <div className="flex justify-between items-center mb-4 pb-2 border-b-2 border-gray-200">
+            <h3 className="text-xl font-bold">{title}</h3>
+            <div className="flex items-center gap-4">
+              <button
+                onClick={handleDownloadPDF}
+                className="px-4 py-2 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors focus:ring-2 focus:ring-blue-400 focus:ring-offset-2 focus:outline-none"
+              >
+                Download PDF
+              </button>
+              <button
+                onClick={() => {
+                  setShowModal(false);
+                  setSelectedYear(null);
+                  setYearlyViewType(null);
+                }}
+                className="text-gray-500 hover:text-gray-700"
+              >
+                ✕
+              </button>
             </div>
           </div>
 
-          {/* Spending Section */}
-          <div>
-            <h4 className="text-lg font-semibold mb-2">Spending</h4>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment Method</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {transactions.spendings.map(spending => (
-                    <tr key={spending._id} className="hover:bg-gray-50">
-                      <td className="px-4 py-2">{new Date(spending.date).toLocaleDateString()}</td>
-                      <td className="px-4 py-2">{formatCurrency(spending.amount)}</td>
-                      <td className="px-4 py-2 capitalize">{spending.category}</td>
-                      <td className="px-4 py-2 capitalize">{spending.paymentMethod}</td>
-                      <td className="px-4 py-2">{spending.description}</td>
+          {/* Show only relevant section based on yearly view type */}
+          {(!selectedYear || yearlyViewType === 'income') && (
+            <div className="mb-6">
+              <h4 className="text-lg font-semibold mb-2 pb-2 border-b border-gray-200">Income</h4>
+              <div className="overflow-x-auto border-2 border-gray-200 rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {transactions.incomes.map(income => (
+                      <tr key={income._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2">{new Date(income.date).toLocaleDateString()}</td>
+                        <td className="px-4 py-2">{formatCurrency(income.amount)}</td>
+                        <td className="px-4 py-2 capitalize">{income.category}</td>
+                        <td className="px-4 py-2">{income.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
+
+          {(!selectedYear || yearlyViewType === 'spending') && (
+            <div>
+              <h4 className="text-lg font-semibold mb-2 pb-2 border-b border-gray-200">Spending</h4>
+              <div className="overflow-x-auto border-2 border-gray-200 rounded-lg">
+                <table className="min-w-full divide-y divide-gray-200">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Date</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Amount</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Category</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Payment Method</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Description</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {transactions.spendings.map(spending => (
+                      <tr key={spending._id} className="hover:bg-gray-50">
+                        <td className="px-4 py-2">{new Date(spending.date).toLocaleDateString()}</td>
+                        <td className="px-4 py-2">{formatCurrency(spending.amount)}</td>
+                        <td className="px-4 py-2 capitalize">{spending.category}</td>
+                        <td className="px-4 py-2 capitalize">{spending.paymentMethod}</td>
+                        <td className="px-4 py-2">{spending.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     );
   };
 
-  // Update the monthly summary cards to be clickable
+  // Update the yearly summary card to include buttons
   return (
     <div className="space-y-8">
       {/* Yearly Summary */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-4">Yearly Tax Summary</h2>
+      <div className="bg-white rounded-lg shadow-lg border-2 border-gray-200 p-6">
+        <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-gray-200">Yearly Tax Summary</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Object.entries(summaryData.yearly)
             .sort(([yearA], [yearB]) => yearB - yearA)
             .map(([year, data]) => (
-              <div key={year} className="bg-gray-50 rounded-lg p-4">
-                <h3 className="text-xl font-semibold mb-2">{year}</h3>
+              <div key={year} className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 shadow-sm">
+                <h3 className="text-xl font-semibold mb-2 pb-2 border-b border-gray-200">{year}</h3>
                 <div className="space-y-2">
-                  <p>Income: {formatCurrency(data.income)}</p>
-                  <p>Expenses: {formatCurrency(data.expenses)}</p>
-                  <p className="font-semibold text-blue-600">
+                  <p className="py-1 border-b border-gray-100">Income: {formatCurrency(data.income)}</p>
+                  <p className="py-1 border-b border-gray-100">Expenses: {formatCurrency(data.expenses)}</p>
+                  <p className="font-semibold text-blue-600 pt-1">
                     Tax Owed: {formatCurrency(data.taxOwed)}
                   </p>
+                  <div className="flex gap-2 pt-3">
+                    <button
+                      onClick={() => handleYearClick(year, 'income')}
+                      className="flex-1 px-3 py-1 text-sm bg-emerald-500 text-white rounded hover:bg-emerald-600 transition-colors focus:ring-2 focus:ring-emerald-400 focus:ring-offset-2 focus:outline-none"
+                    >
+                      View Income
+                    </button>
+                    <button
+                      onClick={() => handleYearClick(year, 'spending')}
+                      className="flex-1 px-3 py-1 text-sm bg-rose-500 text-white rounded hover:bg-rose-600 transition-colors focus:ring-2 focus:ring-rose-400 focus:ring-offset-2 focus:outline-none"
+                    >
+                      View Spending
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -249,8 +420,8 @@ export default function TaxSummary() {
       </div>
 
       {/* Monthly Summary */}
-      <div className="bg-white rounded-lg shadow p-6">
-        <h2 className="text-2xl font-bold mb-4">Monthly Tax Summary</h2>
+      <div className="bg-white rounded-lg shadow-lg border-2 border-gray-200 p-6">
+        <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-gray-200">Monthly Tax Summary</h2>
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {Object.entries(summaryData.monthly)
             .sort(([keyA], [keyB]) => keyB.localeCompare(keyA))
@@ -258,13 +429,13 @@ export default function TaxSummary() {
               <div
                 key={monthKey}
                 onClick={() => handleMonthClick(monthKey)}
-                className="bg-gray-50 rounded-lg p-4 cursor-pointer hover:bg-gray-100 transition-colors"
+                className="bg-gray-50 rounded-lg p-4 border-2 border-gray-200 shadow-sm cursor-pointer hover:bg-gray-100 hover:border-blue-300 transition-all"
               >
-                <h3 className="text-lg font-semibold mb-2">{formatMonth(monthKey)}</h3>
+                <h3 className="text-lg font-semibold mb-2 pb-2 border-b border-gray-200">{formatMonth(monthKey)}</h3>
                 <div className="space-y-2">
-                  <p>Income: {formatCurrency(data.income)}</p>
-                  <p>Expenses: {formatCurrency(data.expenses)}</p>
-                  <p className="font-semibold text-blue-600">
+                  <p className="py-1 border-b border-gray-100">Income: {formatCurrency(data.income)}</p>
+                  <p className="py-1 border-b border-gray-100">Expenses: {formatCurrency(data.expenses)}</p>
+                  <p className="font-semibold text-blue-600 pt-1">
                     Tax Owed: {formatCurrency(data.taxOwed)}
                   </p>
                 </div>

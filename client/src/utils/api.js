@@ -29,3 +29,25 @@ export const api = async (endpoint, options = {}) => {
 
   return data;
 };
+
+export const deleteSpending = async (id) => {
+  try {
+    const response = await api(`/spending/${id}`, {
+      method: 'DELETE'
+    });
+    return response;
+  } catch (error) {
+    throw new Error('Failed to delete spending');
+  }
+};
+
+export const deleteIncome = async (id) => {
+  try {
+    const response = await api(`/income/${id}`, {
+      method: 'DELETE'
+    });
+    return response;
+  } catch (error) {
+    throw new Error('Failed to delete income');
+  }
+};
