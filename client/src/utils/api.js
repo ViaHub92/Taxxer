@@ -1,3 +1,7 @@
+const API_URL = import.meta.env.PROD 
+  ? 'http://18.221.245.7:5050'  // Your production API endpoint
+  : 'http://localhost:5050';       // Development endpoint
+
 export const api = async (endpoint, options = {}) => {
   const token = localStorage.getItem('token');
   
@@ -14,7 +18,7 @@ export const api = async (endpoint, options = {}) => {
     }
   };
 
-  const response = await fetch(`http://localhost:5050${endpoint}`, config);
+  const response = await fetch(`${API_URL}${endpoint}`, config);
   const data = await response.json();
 
   if (!response.ok) {
