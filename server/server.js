@@ -8,8 +8,17 @@ import auth from "./middleware/auth.js";
 const PORT = process.env.PORT || 5050;
 const app = express();
 
-app.use(cors());
+app.use(cors({
+  origin: ['https://taxxer.link', 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token']
+}));
 app.use(express.json());
+
+// Add health check endpoint
+app.get('/health', (req, res) => {
+  res.status(200).send('OK');
+});
 
 app.use("/users", users);
 

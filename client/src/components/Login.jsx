@@ -12,7 +12,7 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const response = await fetch("http://localhost:5050/users/login", {
+      const response = await fetch("http://api.taxxer.link", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"

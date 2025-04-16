@@ -1,5 +1,5 @@
 const API_URL = import.meta.env.PROD 
-  ? 'http://18.221.245.7:5050'  // Your production API endpoint
+  ? 'https://api.taxxer.link'  // Your production API endpoint
   : 'http://localhost:5050';       // Development endpoint
 
 export const api = async (endpoint, options = {}) => {
