@@ -8,6 +8,10 @@ import auth from "./middleware/auth.js";
 const PORT = process.env.PORT || 5050;
 const app = express();
 
+app.get('/', (req, res) => {
+  res.send('Welcome to the Taxxer API');
+});
+
 app.use(cors({
   origin: ['https://taxxer.link', 'http://localhost:5173'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
