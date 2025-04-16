@@ -391,6 +391,19 @@ export default function TaxSummary() {
   // Update the yearly summary card to include buttons
   return (
     <div className="space-y-8">
+      {/* Disclaimer */}
+      <div className="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-4">
+        <div className="flex">
+          <div className="ml-3">
+            <p className="text-sm text-yellow-700">
+              <strong>Disclaimer:</strong> Tax estimates are based on Virginia's self-employment income 
+              taxing standards and are rough estimates only (15.3% of 92.35% of net earnings). 
+              Please consult a tax professional for accurate tax calculations.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Yearly Summary */}
       <div className="bg-white rounded-lg shadow-lg border-2 border-gray-200 p-6">
         <h2 className="text-2xl font-bold mb-4 pb-2 border-b-2 border-gray-200">Yearly Tax Summary</h2>
