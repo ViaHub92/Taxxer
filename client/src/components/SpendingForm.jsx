@@ -32,20 +32,10 @@ export default function SpendingForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch('http://localhost:5050/spending', {
+      await api('/spending', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-auth-token': token
-        },
         body: JSON.stringify(spending)
       });
-
-      if (!response.ok) {
-        throw new Error('Failed to add spending');
-      }
-
       setSpending({
         date: '',
         amount: '',
