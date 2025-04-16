@@ -32,16 +32,27 @@ export default function SpendingForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api('/spending', {
-        method: 'POST',
+      const response = await fetch("https://api.taxxer.link/spending", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-auth-token": localStorage.getItem("token")
+        },
         body: JSON.stringify(spending)
       });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to add spending");
+      }
+
       setSpending({
-        date: '',
+        date: new Date().toISOString().split('T')[0],
         amount: '',
-        category: '',
+        category: 'housing',
         description: '',
-        paymentMethod: ''
+        paymentMethod: 'cash'
       });
       window.location.reload();
     } catch (error) {

@@ -21,14 +21,25 @@ export default function IncomeForm() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await api('/income', {
-        method: 'POST',
+      const response = await fetch("https://api.taxxer.link/income", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-auth-token": localStorage.getItem("token")
+        },
         body: JSON.stringify(income)
       });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to add income");
+      }
+
       setIncome({
-        date: '',
+        date: new Date().toISOString().split('T')[0],
         amount: '',
-        category: '',
+        category: 'salary',
         description: '',
         taxable: true
       });

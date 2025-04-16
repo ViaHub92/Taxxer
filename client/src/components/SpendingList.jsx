@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { api, deleteSpending } from '../utils/api';
 
 export default function SpendingList() {
   const [spendings, setSpendings] = useState([]);
@@ -12,7 +11,18 @@ export default function SpendingList() {
 
   const fetchSpendings = async () => {
     try {
-      const data = await api('/spending');
+      const response = await fetch("https://api.taxxer.link/spending", {
+        headers: {
+          "x-auth-token": localStorage.getItem("token")
+        }
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch spendings");
+      }
+
       setSpendings(data);
     } catch (err) {
       setError(err.message);
@@ -27,8 +37,19 @@ export default function SpendingList() {
     }
 
     try {
-      await deleteSpending(id);
-      // Refresh the list after deletion
+      const response = await fetch(`https://api.taxxer.link/spending/${id}`, {
+        method: "DELETE",
+        headers: {
+          "x-auth-token": localStorage.getItem("token")
+        }
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete spending");
+      }
+
       fetchSpendings();
     } catch (err) {
       setError(err.message);

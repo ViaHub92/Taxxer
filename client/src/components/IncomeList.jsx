@@ -12,7 +12,18 @@ export default function IncomeList() {
 
   const fetchIncomes = async () => {
     try {
-      const data = await api('/income');
+      const response = await fetch("https://api.taxxer.link/income", {
+        headers: {
+          "x-auth-token": localStorage.getItem("token")
+        }
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to fetch incomes");
+      }
+
       setIncomes(data);
     } catch (err) {
       setError(err.message);
@@ -27,8 +38,19 @@ export default function IncomeList() {
     }
 
     try {
-      await deleteIncome(id);
-      // Refresh the list after deletion
+      const response = await fetch(`https://api.taxxer.link/income/${id}`, {
+        method: "DELETE",
+        headers: {
+          "x-auth-token": localStorage.getItem("token")
+        }
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete income");
+      }
+
       fetchIncomes();
     } catch (err) {
       setError(err.message);

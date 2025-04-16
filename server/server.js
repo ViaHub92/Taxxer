@@ -13,7 +13,7 @@ app.get('/', (req, res) => {
 });
 
 app.use(cors({
-  origin: ['https://taxxer.link', 'http://localhost:5173', 'https://djdo9adcan9kl.cloudfront.net'],
+  origin: ['https://taxxer.link', 'https://www.taxxer.link', 'http://localhost:5173', 'https://djdo9adcan9kl.cloudfront.net'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'x-auth-token'],
   credentials: true 
