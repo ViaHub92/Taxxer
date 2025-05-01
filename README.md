@@ -1,5 +1,5 @@
 # Taxxer
-A web application for tracking income, expenses, and calculating estimated taxes. Taxxer helps you maintain financial records and provides tax insights through an intuitive interface.
+A web application for tracking income, expenses, and calculating estimated taxes. Taxxer helps you maintain financial records and provides tax insights through an intuitive interface. https://www.taxxer.link/
 
 ## 🌟 Features
 
